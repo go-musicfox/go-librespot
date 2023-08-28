@@ -78,7 +78,7 @@ func (s *Session) startSession(loginPacket []byte, username string) error {
 			} else {
 				err = s.handle(cmd, data)
 				if err != nil {
-					fmt.Println("Error handling packet: ", err)
+					log.Println("Error handling packet: ", err)
 				}
 			}
 		}

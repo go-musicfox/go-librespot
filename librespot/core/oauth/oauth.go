@@ -15,7 +15,7 @@ type OAuth struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	Scope        string `json:"scope"`
-	
+
 	// Expiry is the optional expiration time of the access token.
 	//
 	// If zero, TokenSource implementations will reuse the same
@@ -23,10 +23,8 @@ type OAuth struct {
 	// mechanisms for that TokenSource will not be used.
 	//Expiry time.Time `json:"expiry,omitempty"`
 
-
-	Error        string
+	Error string
 }
-
 
 // Login to Spotify using the OAuth method
 func LoginOAuth(clientId, clientSecret, callbackURL string) (string, error) {
@@ -38,7 +36,7 @@ func LoginOAuth(clientId, clientSecret, callbackURL string) (string, error) {
 		return "", err
 	}
 	tok := token.AccessToken
-	fmt.Println("Got oauth token:\n", tok)
+	log.Println("Got oauth token:\n", tok)
 	return tok, nil
 }
 
@@ -67,7 +65,7 @@ func GetOauthAccessToken(code string, redirectUri string, clientId string, clien
 		return nil, err
 	}
 	err = json.Unmarshal(body, &auth)
-	fmt.Printf("auth:\n%+v\n", auth)
+	log.Printf("auth:\n%+v\n", auth)
 	if err != nil {
 		return nil, err
 	}
@@ -117,18 +115,17 @@ func StartLocalOAuthServer(clientId string, clientSecret string, callback string
 }
 */
 
-
 func getOAuthToken(clientId string, clientSecret string, callback string) (*OAuth, error) {
 	ch := make(chan *OAuth)
 
-	fmt.Println("go to this url")
+	log.Println("go to this url")
 	urlPath := "https://accounts.spotify.com/authorize?" +
 		"client_id=" + clientId +
 		"&response_type=code" +
 		"&redirect_uri=" + callback +
 		"&scope=streaming"
-	fmt.Println(urlPath)
-	
+	log.Println(urlPath)
+
 	// router := http.NewServeMux()
 	// server := &http.Server{
 	// 	// TODO pull port from callback
@@ -140,11 +137,11 @@ func getOAuthToken(clientId string, clientSecret string, callback string) (*OAut
 		auth, err := GetOauthAccessToken(params.Get("code"), callback, clientId, clientSecret)
 		if err != nil {
 			fmt.Fprintf(w, "Error getting token %q", err)
-			return 
+			return
 		}
 		fmt.Fprintf(w, "Got token, loggin in")
 		ch <- auth
-		
+
 		// time.Sleep(time.Second * 1)
 		// _ = server.Shutdown(context.Background())
 	})
@@ -152,14 +149,13 @@ func getOAuthToken(clientId string, clientSecret string, callback string) (*OAut
 	go func() {
 		log.Fatal(http.ListenAndServe(":5000", nil))
 	}()
-	
-		// Wait then bail
+
+	// Wait then bail
 	select {
 	case <-time.After(time.Second * 60):
 		return nil, errors.New("timed out waiting for auth")
 	case validAuth := <-ch:
-			return validAuth, nil
+		return validAuth, nil
 	}
-
 
 }
